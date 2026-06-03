@@ -1,7 +1,4 @@
 {
   "name": "wine-night",
-  "version": "1.0.0",
-  "dependencies": {
-    "@vercel/blob": "^0.23.0"
-  }
+  "version": "1.0.0"
 }
