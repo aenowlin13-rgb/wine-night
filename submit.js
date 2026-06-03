@@ -1,4 +1,24 @@
-import { kv } from '@vercel/kv';
+import { put, head, getDownloadUrl } from '@vercel/blob';
+
+const BLOB_KEY = 'winenight-submissions.json';
+
+async function readSubmissions() {
+  try {
+    const res = await head(BLOB_KEY);
+    const data = await fetch(res.url);
+    return await data.json();
+  } catch (e) {
+    return { names: [], submissions: [] };
+  }
+}
+
+async function writeSubmissions(data) {
+  await put(BLOB_KEY, JSON.stringify(data), {
+    access: 'public',
+    contentType: 'application/json',
+    addRandomSuffix: false,
+  });
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -11,15 +31,15 @@ export default async function handler(req, res) {
   if (!name || !scores) return res.status(400).json({ error: 'Missing name or scores' });
 
   const nameKey = name.trim().toLowerCase();
+  const data = await readSubmissions();
 
-  const alreadySubmitted = await kv.sismember('winenight:names', nameKey);
-  if (alreadySubmitted) return res.status(409).json({ error: 'Already submitted' });
+  if (data.names.includes(nameKey)) {
+    return res.status(409).json({ error: 'Already submitted' });
+  }
 
-  await kv.sadd('winenight:names', nameKey);
+  data.names.push(nameKey);
+  data.submissions.push({ name: name.trim(), scores, submittedAt: Date.now() });
 
-  const submissionId = `${nameKey}-${Date.now()}`;
-  await kv.hset(`winenight:submission:${submissionId}`, { name: name.trim(), scores: JSON.stringify(scores) });
-  await kv.sadd('winenight:submissions', submissionId);
-
+  await writeSubmissions(data);
   return res.status(200).json({ ok: true });
 }
