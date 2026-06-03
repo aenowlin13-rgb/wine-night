@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Wine Night</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff;
+    --bg2: #f6f5f0;
+    --bg3: #eeedea;
+    --text: #1a1a18;
+    --text2: #6b6a65;
+    --text3: #a09f9a;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --radius: 10px;
+    --radius-sm: 7px;
+    --red-bg: #faece7; --red-text: #993c1d; --red-border: #f0997b;
+    --white-bg: #faeeda; --white-text: #854f0b; --white-border: #ef9f27;
+    --green-bg: #eaf3de; --green-text: #3b6d11; --green-border: #639922;
+    --amber: #ef9f27; --amber-dark: #ba7517;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1c; --bg2: #28281f; --bg3: #313128;
+      --text: #f0ede8; --text2: #a09f9a; --text3: #6b6a65;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.2);
+      --red-bg: #4a1b0c; --red-text: #f5c4b3; --red-border: #993c1d;
+      --white-bg: #412402; --white-text: #fac775; --white-border: #854f0b;
+      --green-bg: #173404; --green-text: #c0dd97; --green-border: #3b6d11;
+    }
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  .container { max-width: 560px; margin: 0 auto; padding: 24px 16px 48px; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  h1 { font-size: 22px; font-weight: 500; margin-bottom: 4px; }
+  h2 { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+  .sub { font-size: 13px; color: var(--text2); margin-bottom: 24px; line-height: 1.5; }
+  .btn { display: block; width: 100%; padding: 11px 16px; border-radius: var(--radius-sm); border: 0.5px solid var(--border2); background: transparent; color: var(--text); font-size: 14px; font-weight: 500; cursor: pointer; text-align: center; margin-bottom: 10px; transition: background 0.12s; }
+  .btn:hover { background: var(--bg2); }
+  .btn.primary { background: var(--green-text); border-color: var(--green-text); color: var(--green-bg); }
+  .btn.primary:hover { opacity: 0.9; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  label { font-size: 13px; color: var(--text2); display: block; margin-bottom: 6px; }
+  input[type=text] { width: 100%; padding: 9px 12px; font-size: 14px; border-radius: var(--radius-sm); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text); outline: none; margin-bottom: 20px; }
+  input[type=text]:focus { border-color: var(--green-border); }
+  .section-label { font-size: 11px; font-weight: 500; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; margin: 24px 0 10px; }
+  .wine-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; }
+  .wine-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .num { width: 28px; height: 28px; border-radius: 50%; background: var(--bg2); border: 0.5px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; }
+  .type-badge { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; }
+  .badge-red { background: var(--red-bg); color: var(--red-text); }
+  .badge-white { background: var(--white-bg); color: var(--white-text); }
+  .pts-label { margin-left: auto; font-size: 12px; color: var(--text3); }
+  .pts-val { font-weight: 500; color: var(--text); font-size: 13px; }
+  .crit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+  .crit { background: var(--bg2); border-radius: var(--radius-sm); padding: 8px 10px; }
+  .crit-lbl { font-size: 11px; color: var(--text2); margin-bottom: 5px; }
+  .stars { display: flex; gap: 3px; }
+  .star { width: 18px; height: 18px; border: 1px solid var(--border2); border-radius: 3px; cursor: pointer; background: transparent; transition: background 0.1s; flex-shrink: 0; }
+  .star.on { background: var(--amber); border-color: var(--amber-dark); }
+  .order-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .order-lbl { font-size: 13px; color: var(--text2); flex: 1; min-width: 120px; }
+  .tog { display: flex; gap: 5px; }
+  .tog button { font-size: 12px; padding: 4px 12px; border-radius: var(--radius-sm); border: 0.5px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; transition: all 0.1s; }
+  .tog button.yes { background: var(--green-bg); border-color: var(--green-border); color: var(--green-text); font-weight: 500; }
+  .tog button.no { background: var(--red-bg); border-color: var(--red-border); color: var(--red-text); font-weight: 500; }
+  .alert { border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
+  .alert-green { background: var(--green-bg); color: var(--green-text); border: 0.5px solid var(--green-border); }
+  .alert-red { background: var(--red-bg); color: var(--red-text); border: 0.5px solid var(--red-border); }
+  .metric-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 20px; }
+  .metric { background: var(--bg2); border-radius: var(--radius-sm); padding: 10px 12px; }
+  .metric-lbl { font-size: 11px; color: var(--text2); margin-bottom: 3px; }
+  .metric-val { font-size: 20px; font-weight: 500; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+  .tab { font-size: 13px; padding: 6px 14px; border-radius: var(--radius-sm); border: 0.5px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; }
+  .tab.active { background: var(--bg); border-color: var(--border2); color: var(--text); font-weight: 500; box-shadow: 0 0 0 1px var(--border2); }
+  .leader-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; }
+  .leader-card.top { border: 2px solid var(--green-border); }
+  .winner-badge { font-size: 11px; font-weight: 500; background: var(--green-bg); color: var(--green-text); padding: 2px 8px; border-radius: 20px; display: inline-block; margin-bottom: 8px; }
+  .leader-name { font-size: 15px; font-weight: 500; }
+  .leader-score { font-size: 24px; font-weight: 500; margin: 4px 0; }
+  .leader-score span { font-size: 13px; font-weight: 400; color: var(--text3); }
+  .leader-meta { font-size: 12px; color: var(--text2); }
+  .tie-badge { font-size: 11px; background: var(--white-bg); color: var(--white-text); padding: 2px 8px; border-radius: 20px; margin-left: 8px; }
+  .refresh-btn { font-size: 12px; padding: 5px 12px; border-radius: var(--radius-sm); border: 0.5px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; display: flex; align-items: center; gap: 4px; }
+  .host-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .success-wrap { text-align: center; padding: 40px 0; }
+  .check-icon { font-size: 48px; color: var(--green-text); margin-bottom: 16px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Home -->
+  <div id="s-home" class="screen active">
+    <h1 style="margin-bottom:8px">Wine night</h1>
+    <p class="sub">Blind tasting · 20 wines · 10 tasters</p>
+    <button class="btn primary" onclick="go('s-taster')">I'm tasting</button>
+    <button class="btn" onclick="go('s-host')">Host view</button>
+  </div>
+
+  <!-- Taster -->
+  <div id="s-taster" class="screen">
+    <h2>Your scorecard</h2>
+    <p class="sub">Rate each wine on taste, finish, and overall — then submit once at the end.</p>
+    <div>
+      <label for="taster-name">Your name</label>
+      <input type="text" id="taster-name" placeholder="e.g. Sarah" maxlength="30" />
+    </div>
+    <div id="taster-alert" class="alert alert-green hidden"></div>
+    <div id="taster-error" class="alert alert-red hidden"></div>
+    <div class="section-label">Reds — wines 1–10</div>
+    <div id="wines-red"></div>
+    <div class="section-label">Whites — wines 11–20</div>
+    <div id="wines-white"></div>
+    <button class="btn primary" id="submit-btn" onclick="submitScores()" style="margin-top:16px">Submit scores</button>
+    <button class="btn" onclick="go('s-home')" style="margin-top:6px">Back</button>
+  </div>
+
+  <!-- Host -->
+  <div id="s-host" class="screen">
+    <div class="host-header">
+      <h2 style="margin:0">Leaderboard</h2>
+      <button class="refresh-btn" onclick="loadLeaderboard()">&#8635; Refresh</button>
+    </div>
+    <div class="metric-row">
+      <div class="metric"><div class="metric-lbl">Submitted</div><div class="metric-val" id="m-count">—</div></div>
+      <div class="metric"><div class="metric-lbl">Reds</div><div class="metric-val">10</div></div>
+      <div class="metric"><div class="metric-lbl">Whites</div><div class="metric-val">10</div></div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="hostTab('reds',this)">Reds</button>
+      <button class="tab" onclick="hostTab('whites',this)">Whites</button>
+    </div>
+    <div id="host-reds"></div>
+    <div id="host-whites" class="hidden"></div>
+    <button class="btn" onclick="go('s-home')" style="margin-top:16px">Back</button>
+  </div>
+
+</div>
+<script>
+const wineState = {};
+for (let i = 1; i <= 20; i++) wineState[i] = { taste:0, finish:0, overall:0, order:null };
+
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 's-host') loadLeaderboard();
+}
+
+function range(a,b) { const r=[]; for(let i=a;i<=b;i++) r.push(i); return r; }
+
+function buildCards() {
+  ['red','white'].forEach(type => {
+    const nums = type === 'red' ? range(1,10) : range(11,20);
+    document.getElementById('wines-'+type).innerHTML = nums.map(n => `
+      <div class="wine-card">
+        <div class="wine-head">
+          <div class="num">${n}</div>
+          <span class="type-badge badge-${type}">${type}</span>
+          <span class="pts-label">Total: <span class="pts-val" id="ptv-${n}">0</span>/15</span>
+        </div>
+        <div class="crit-grid">
+          ${['taste','finish','overall'].map(c=>`
+            <div class="crit">
+              <div class="crit-lbl">${c[0].toUpperCase()+c.slice(1)}</div>
+              <div class="stars" id="st-${n}-${c}">
+                ${[1,2,3,4,5].map(v=>`<div class="star" onclick="rate(${n},'${c}',${v})" data-v="${v}"></div>`).join('')}
+              </div>
+            </div>`).join('')}
+        </div>
+        <div class="order-row">
+          <span class="order-lbl">Would you order it again?</span>
+          <div class="tog">
+            <button id="yes-${n}" onclick="setOrder(${n},true)">Yes</button>
+            <button id="no-${n}" onclick="setOrder(${n},false)">No</button>
+          </div>
+        </div>
+      </div>`).join('');
+  });
+}
+
+function rate(n,c,v) {
+  wineState[n][c] = wineState[n][c]===v ? 0 : v;
+  document.querySelectorAll(`#st-${n}-${c} .star`).forEach(s => s.classList.toggle('on', parseInt(s.dataset.v) <= wineState[n][c]));
+  document.getElementById('ptv-'+n).textContent = wineState[n].taste + wineState[n].finish + wineState[n].overall;
+}
+
+function setOrder(n,val) {
+  wineState[n].order = wineState[n].order===val ? null : val;
+  document.getElementById('yes-'+n).className = wineState[n].order===true ? 'yes' : '';
+  document.getElementById('no-'+n).className = wineState[n].order===false ? 'no' : '';
+}
+
+function showAlert(id, msg, type) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'alert alert-' + type;
+  el.classList.remove('hidden');
+}
+
+async function submitScores() {
+  const name = document.getElementById('taster-name').value.trim();
+  if (!name) { showAlert('taster-error','Please enter your name before submitting.','red'); return; }
+  document.getElementById('taster-error').classList.add('hidden');
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  const scores = {};
+  for (let i=1;i<=20;i++) {
+    scores[i] = {
+      taste: wineState[i].taste,
+      finish: wineState[i].finish,
+      overall: wineState[i].overall,
+      total: wineState[i].taste + wineState[i].finish + wineState[i].overall,
+      order: wineState[i].order
+    };
+  }
+
+  try {
+    const res = await fetch('/api/submit', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ name, scores })
+    });
+    const data = await res.json();
+    if (res.status === 409) {
+      showAlert('taster-alert','Scores for "'+name+'" have already been submitted.','green');
+      btn.disabled = false; btn.textContent = 'Submit scores'; return;
+    }
+    if (!res.ok) throw new Error(data.error || 'Unknown error');
+    document.getElementById('s-taster').innerHTML = `
+      <div class="success-wrap">
+        <div class="check-icon">&#10003;</div>
+        <h2>Scores submitted!</h2>
+        <p class="sub" style="margin-top:8px">Thanks ${name}. The host will reveal the winners at the end.</p>
+        <button class="btn" style="margin-top:24px;max-width:200px;margin-left:auto;margin-right:auto" onclick="go('s-home')">Back to home</button>
+      </div>`;
+  } catch(e) {
+    showAlert('taster-error','Something went wrong. Please try again.','red');
+    btn.disabled = false; btn.textContent = 'Submit scores';
+  }
+}
+
+async function loadLeaderboard() {
+  try {
+    const res = await fetch('/api/scores');
+    const data = await res.json();
+    const { count=0, totals={}, orderCounts={} } = data;
+    document.getElementById('m-count').textContent = count;
+    const n = count || 1;
+
+    const renderList = (nums, containerId) => {
+      const sorted = [...nums].sort((a,b) => {
+        const d = (totals[b]||0) - (totals[a]||0);
+        return d !== 0 ? d : (orderCounts[b]||0) - (orderCounts[a]||0);
+      });
+      const topScore = totals[sorted[0]]||0;
+      const isTied = sorted.length > 1 && (totals[sorted[1]]||0) === topScore && topScore > 0;
+      document.getElementById(containerId).innerHTML = sorted.map((w,i) => {
+        const avg = count > 0 ? (totals[w]||0)/count : 0;
+        return `<div class="leader-card${i===0?' top':''}">
+          ${i===0 ? `<div class="winner-badge">Current leader${isTied?'</div><span class="tie-badge">Tiebreaker active</span>':'</div>'}` : ''}
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <span class="leader-name">Wine #${w}</span>
+          </div>
+          <div class="leader-score">${avg.toFixed(1)}<span>/15 avg</span></div>
+          <div class="leader-meta">Order again: ${orderCounts[w]||0} of ${count} &middot; Total pts: ${totals[w]||0}</div>
+        </div>`;
+      }).join('');
+    };
+
+    renderList(range(1,10),'host-reds');
+    renderList(range(11,20),'host-whites');
+  } catch(e) {
+    document.getElementById('host-reds').innerHTML = '<p style="font-size:13px;color:var(--text2)">Could not load scores. Check your API connection.</p>';
+  }
+}
+
+function hostTab(type, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('host-reds').classList.toggle('hidden', type!=='reds');
+  document.getElementById('host-whites').classList.toggle('hidden', type!=='whites');
+}
+
+buildCards();
+</script>
+</body>
+</html>
