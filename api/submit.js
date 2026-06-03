@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv';
+import { put, head } from '@vercel/blob';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
